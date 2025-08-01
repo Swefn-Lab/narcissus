@@ -190,6 +190,7 @@ int main()
     bool greyscale = true, blur = true, canny = true, resize = true;
     f64 time_elapsed = 0; 
     f64 prev = get_ms(); 
+    //cv::Mat final = {};
 
     //u8 final[64*64] = {};
     while (running) {
@@ -338,12 +339,13 @@ int main()
         u8 array[64*64/8] = {};
         u32 write_at = 0;
 
+        //final = final_to_send.clone();
         profile(processing_array) {
             for (i32 y = 0; y < 64; ++y) {
                 for (i32 x = 0; x < 64; x += 8) {
                     u8 byte = 0;
                     for (i32 i = 0; i < 8; ++i) {
-                        byte |= (final_to_send.at<u8>(y, x+i)?1:0)<<(7-i);
+                        byte |= (final_to_send.at<u8>(y, x+i)?0b10000000:0b00000000)>>i;
                     }
 
                     //printf(BINARY_PATTERN, binary(byte));
@@ -408,21 +410,23 @@ int main()
             printf("%c", final[i*64+j]?'X':' ');
         }
         println("");
-    }
+    }*/
+    
+        /*
     println("");
-    for (i32 i = 0; i < 64; ++i) {
-        for (i32 j = 0; j < 64; j+=8) {
+    for (i32 y = 0; y < 64; ++y) {
+        for (i32 x = 0; x < 64; x+=8) {
             u8 byte = 0;
-            for (i32 x = 0; x < 8; ++x) {
-                byte |= (final[i*64+(j+x)]?1:0)<<(7-x);
+            for (i32 i = 0; i < 8; ++i) {
+                byte |= (final.at<u8>(y, x+i)?0b10000000:0b00000000)>>i;
             }
 
             printf(BINARY_PATTERN, binary(byte));
         }
         println("");
     }*/
-    println("Lower threshold: %d", lower_threshold);
-    println("Upper threshold: %d", upper_threshold);
+    //println("Lower threshold: %d", lower_threshold);
+    //println("Upper threshold: %d", upper_threshold);
     
     return 0;
 }
