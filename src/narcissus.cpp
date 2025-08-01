@@ -32,17 +32,25 @@
 
 #include "layer.h"
 
+#define SOLOMON
 #if defined(SOLOMON)
 #include "serial.h"
 #else 
+
+#include <Windows.h>
 
 HANDLE init_serial7() { return (HANDLE)NULL; }
 BOOL serial_write(HANDLE h, BYTE *input, u32 size) { return NULL; }
 void free_serial(HANDLE h) {}
 
-#include <Windows.h>
+
 
 #endif 
+
+
+#define profile(_time_elapsed) for (i32 _i##__LINE__ = SDL_GetTicks(), _first##__LINE__ = TRUE; \
+                                    _first##__LINE__; \
+                                    _first##__LINE__ = FALSE, _time_elapsed = SDL_GetTicks() - _i##__LINE__)
 
 #if defined(PLATFORM_WIN32)
 # define WEBCAM 0
@@ -138,9 +146,13 @@ int main()
     HANDLE M4; 
     M4 = init_serial7();    
     defer {free_serial(M4); }; 
+    
+
+    u32 processing_array = 0, writing_array = 0;
     bool greyscale = true, blur = true, canny = true, resize = true;
     u64 time_elapsed = 0; 
     auto prev = SDL_GetTicks(); 
+
     while (running) {
         SDL_Event event = {};
         while (SDL_PollEvent(&event)) {
@@ -215,6 +227,12 @@ int main()
             
             ImGui::Text("%d FPS", (int)(1.0f/((f32)time_elapsed/1000.f)));
             ImGui::Text("Time since last frame: %lld ms", time_elapsed);
+
+            ImGui::Spacing();
+
+            ImGui::Text("Time spent processing array: %d ms", processing_array);
+            ImGui::Text("Time spent writing to serial connection: %d ms", writing_array);
+
             ImGui::SliderInt("Lower threshold", &lower_threshold, 0, 255);
             ImGui::SliderInt("Upper threshold", &upper_threshold, 0, 255);
 
@@ -260,22 +278,28 @@ int main()
         SDL_RenderPresent(renderer);
 
         BYTE array[64*64] = {};
-        for (int i = 0; i < final_to_send.rows; i++) {
-            for (int j = 0; j < final_to_send.cols; j++) {
-                auto pixel = (int)final_to_send.at<uchar>(i,j); 
-                BYTE val; 
-                if (pixel == 0) {
-                    val = 0; 
-                }
-                else {
-                    val = 255; 
-                }
 
-                array[i*64+j] = val;        
-            }
-        } 
+        profile(processing_array) {
+            for (int i = 0; i < final_to_send.rows; i++) {
+                for (int j = 0; j < final_to_send.cols; j++) {
+                    auto pixel = (int)final_to_send.at<uchar>(i,j); 
+                    BYTE val; 
+                    if (pixel == 0) {
+                        val = 0; 
+                    }
+                    else {
+                        val = 255; 
+                    }
+
+                    array[i*64+j] = val;        
+                }
+            } 
+        }
         
-        serial_write(M4, array, sizeof(BYTE)*64*64);   
+        profile(writing_array) {
+            serial_write(M4, array, sizeof(BYTE)*64*64);  
+        }
+ 
         
         // Cap to 60 fps. 
         auto now = SDL_GetTicks();
