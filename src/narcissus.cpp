@@ -37,7 +37,7 @@
 #else 
 
 HANDLE init_serial7() { return (HANDLE)NULL; }
-BOOL serial_write(HANDLE h, BYTE input) { return NULL; }
+BOOL serial_write(HANDLE h, BYTE *input, u32 size) { return NULL; }
 void free_serial(HANDLE h) {}
 
 #include <Windows.h>
@@ -258,7 +258,9 @@ int main()
 
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
-         for (int i = 0; i < final_to_send.rows; i++) {
+
+        BYTE array[64*64] = {};
+        for (int i = 0; i < final_to_send.rows; i++) {
             for (int j = 0; j < final_to_send.cols; j++) {
                 auto pixel = (int)final_to_send.at<uchar>(i,j); 
                 BYTE val; 
@@ -268,10 +270,13 @@ int main()
                 else {
                     val = 255; 
                 }
-                serial_write(M4, val);   
+
+                array[i*64+j] = val;        
             }
         } 
-
+        
+        serial_write(M4, array, sizeof(BYTE)*64*64);   
+        
         // Cap to 60 fps. 
         auto now = SDL_GetTicks();
         

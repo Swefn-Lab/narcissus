@@ -57,9 +57,9 @@ HANDLE init_serial7() {
 }
 
 
-BOOL serial_write(HANDLE h, BYTE input) {
-	DWORD bytesWritten; 
-	return (WriteFile(h, &input, sizeof(input), &bytesWritten, NULL)); 
+BOOL serial_write(HANDLE h, BYTE *input, u32 size) {
+	DWORD bytesWritten = 0; 
+	return (WriteFile(h, input, size, &bytesWritten, NULL)); 
 
 }
 
