@@ -187,18 +187,22 @@ int main()
             tmp_mat = working_mat.clone(); 
         }
 
-        cv::Mat final;
+        cv::Mat final_to_send = working_mat, final_for_renderering;
 
         if (greyscale) {
-            cv::cvtColor(tmp_mat, final, cv::COLOR_GRAY2BGR);
+            cv::cvtColor(tmp_mat, final_for_renderering, cv::COLOR_GRAY2BGR);
         } else {
-            final = working_mat;
+            final_for_renderering = working_mat;
         }
 
         if (resize) {
-            SDL_UpdateTexture(tex_resized, 0, (void *)final.data, final.step1());
+            SDL_UpdateTexture(tex_resized, 0, 
+                              (void *)final_for_renderering.data, 
+                              final_for_renderering.step1());
         } else {
-            SDL_UpdateTexture(tex_full, 0, (void *)final.data, final.step1());
+            SDL_UpdateTexture(tex_full, 0, 
+                              (void *)final_for_renderering.data,
+                              final_for_renderering.step1());
         }
         
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -254,9 +258,9 @@ int main()
 
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
-         for (int i = 0; i < 64; i++) {
-            for (int j = 0; j < 64; j++) {
-                auto pixel = (int)final.at<uchar>(i,j); 
+         for (int i = 0; i < final_to_send.rows; i++) {
+            for (int j = 0; j < final_to_send.cols; j++) {
+                auto pixel = (int)final_to_send.at<uchar>(i,j); 
                 BYTE val; 
                 if (pixel == 0) {
                     val = 0; 
@@ -264,11 +268,9 @@ int main()
                 else {
                     val = 255; 
                 }
-                serial_write(M4, val);
+                serial_write(M4, val);   
             }
-
         } 
-
 
         // Cap to 60 fps. 
         auto now = SDL_GetTicks();
