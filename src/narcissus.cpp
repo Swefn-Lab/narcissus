@@ -335,9 +335,10 @@ int main()
             SDL_RenderPresent(renderer);
         }
         // Encoding compression "algorithm" thing
+        u8 array[64*64/8] = {};
+        u32 write_at = 0;
+
         profile(processing_array) {
-            u8 array[64*64/8] = {};
-            u32 write_at = 0;
             for (i32 y = 0; y < 64; ++y) {
                 for (i32 x = 0; x < 64; x += 8) {
                     u8 byte = 0;
