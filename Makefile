@@ -5,12 +5,12 @@ TARGET := narcissus
 BUILD_DIR := ./build
 
 SRC_DIRS := ./src  
-INC_DIRS := ./include ./include/imgui ./include/imgui/backends
+INC_DIRS := ./src/ext/imgui ./src/ext/imgui/backends ./src/ext/SDL3
 
-IMGUI_DIR := ./include/imgui
-IMGUI_SRC := $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp $(IMGUI_DIR)/backends/imgui_impl_sdl3.cpp 
 
-SRCS := $(IMGUI_SRC) $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
+#SRCS := $(IMGUI_SRC) $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
+
+SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
@@ -19,18 +19,12 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 UNAME := $(shell uname)
 
 CC := clang++
-CPPFLAGS := -g -Wall -Wextra -MMD -MP $(INC_FLAGS) $(shell pkg-config --cflags opencv4) $(shell pkg-config --cflags SDL3)
-LDFLAGS := $(shell pkg-config --libs SDL3) $(shell pkg-config --libs opencv4)
+CPPFLAGS := -DPLATFORM_MAC -g -Wall -Wextra $(INC_FLAGS) $(shell pkg-config --cflags opencv4) $(shell pkg-config --cflags SDL3) $(shell pkg-config --cflags freetype2)
+LDFLAGS := $(shell pkg-config --libs SDL3) $(shell pkg-config --libs opencv4) $(shell pkg-config --libs freetype2)
 
 
-all: $(BUILD_DIR)/$(TARGET)
-
-$(BUILD_DIR)/$(TARGET): $(OBJS) 
-	$(CC) $(OBJS) -o $@ $(LDFLAGS) 
-
-$(BUILD_DIR)/%.cpp.o: %.cpp
-	mkdir -p $(dir $@) 
-	$(CC) $(CPPFLAGS) -c $< -o $@
+all:
+	$(CC) $(CPPFLAGS) ./src/narcissus.cpp $(LDFLAGS) -o $(BUILD_DIR)/$(TARGET)
 
 .PHONY: clean run
 run: 
