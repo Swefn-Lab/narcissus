@@ -31,7 +31,19 @@
 #include "imgui_impl_sdlrenderer3.cpp"
 
 #include "layer.h"
+
+#if defined(SOLOMON)
 #include "serial.h"
+#else 
+
+HANDLE init_serial7() { return (HANDLE)NULL; }
+BOOL serial_write(HANDLE h, BYTE input) { return NULL; }
+void free_serial(HANDLE h) {}
+
+#include <Windows.h>
+
+#endif 
+
 #if defined(PLATFORM_WIN32)
 # define WEBCAM 0
 #elif defined(PLATFORM_MAC)
@@ -123,8 +135,8 @@ int main()
     defer { SDL_DestroyTexture(tex_resized); };
     defer { SDL_DestroyTexture(tex_full); };
     
-     HANDLE M4; 
-     M4 = init_serial7();    
+    HANDLE M4; 
+    M4 = init_serial7();    
     defer {free_serial(M4); }; 
     bool greyscale = true, blur = true, canny = true, resize = true;
     u64 time_elapsed = 0; 
@@ -244,7 +256,7 @@ int main()
         SDL_RenderPresent(renderer);
          for (int i = 0; i < 64; i++) {
             for (int j = 0; j < 64; j++) {
-                auto pixel = final.at<BYTE>(i,j); 
+                auto pixel = (int)final.at<uchar>(i,j); 
                 BYTE val; 
                 if (pixel == 0) {
                     val = 0; 
