@@ -51,7 +51,7 @@ int main()
     setvbuf(stderr, 0, _IONBF, 0);
     
 #ifdef WEBCAM
-    cv::VideoCapture cap(WEBCAM);
+    cv::VideoCapture cap(WEBCAM, cv::CAP_DSHOW);
     
     if (cap.isOpened() == false) {
         fprintln(stderr, "Cannot open webcam.");
@@ -80,7 +80,7 @@ int main()
     
     f32 main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
     
-    if (!SDL_CreateWindowAndRenderer("Narcissus",
+    if (!SDL_CreateWindowAndRenderer("Project Narcissus",
                                      (int)(2*w*main_scale), (int)(2*h*main_scale),
                                      SDL_WINDOW_RESIZABLE|SDL_WINDOW_HIGH_PIXEL_DENSITY,
                                      &window, &renderer)) {
